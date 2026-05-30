@@ -104,4 +104,43 @@ public class SudokuCell
         Color = CellColor.None;
         HasError = false;
     }
+
+    /// <summary>
+    /// Crée une sauvegarde de l'état actuel de la cellule.
+    /// Cette sauvegarde pourra être utilisée pour annuler une action.
+    /// </summary>
+    /// <returns>Un memento contenant l'état actuel de la cellule.</returns>
+    public CellMemento CreateMemento()
+    {
+        return new CellMemento(Value, CornerNotes, CenterNotes, Color);
+    }
+
+    /// <summary>
+    /// Restaure l'état de la cellule à partir d'un memento.
+    /// </summary>
+    /// <param name="memento">Sauvegarde à restaurer.</param>
+    public void RestoreMemento(CellMemento memento)
+    {
+        if (IsGiven)
+        {
+            return;
+        }
+
+        Value = memento.Value;
+
+        CornerNotes.Clear();
+        foreach (int note in memento.CornerNotes)
+        {
+            CornerNotes.Add(note);
+        }
+
+        CenterNotes.Clear();
+        foreach (int note in memento.CenterNotes)
+        {
+            CenterNotes.Add(note);
+        }
+
+        Color = memento.Color;
+        HasError = false;
+    }
 }
