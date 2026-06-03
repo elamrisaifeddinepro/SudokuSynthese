@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using SudokuSynthese.Core.Commands;
 using SudokuSynthese.Core.Managers;
@@ -27,8 +28,14 @@ public class MainViewModel : INotifyPropertyChanged
     private readonly SaveLoadService _saveLoadService;
     private readonly SudokuGenerator _sudokuGenerator;
 
+    private readonly DispatcherTimer _timer;
+    private TimeSpan _elapsedTime;
+    private bool _isPuzzleSolved;
+
     private NotationMode _currentMode;
     private CellColor _selectedColor;
+    private DifficultyLevel _selectedDifficulty;
+    private string _statusMessage;
 
     public ObservableCollection<CellViewModel> Cells { get; }
 
@@ -58,10 +65,51 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public DifficultyLevel SelectedDifficulty
+    {
+        get => _selectedDifficulty;
+        set
+        {
+            if (_selectedDifficulty != value)
+            {
+                _selectedDifficulty = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Temps écoulé depuis le début de la grille actuelle.
+    /// </summary>
+    public string ElapsedTimeText
+    {
+        get
+        {
+            return _elapsedTime.ToString(@"mm\:ss");
+        }
+    }
+
+    /// <summary>
+    /// Message affiché dans la barre inférieure.
+    /// </summary>
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set
+        {
+            if (_statusMessage != value)
+            {
+                _statusMessage = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public ICommand SelectCellCommand { get; }
     public ICommand InputNumberCommand { get; }
     public ICommand SetModeCommand { get; }
     public ICommand SetColorCommand { get; }
+    public ICommand SetDifficultyCommand { get; }
     public ICommand UndoCommand { get; }
     public ICommand RedoCommand { get; }
     public ICommand SaveCommand { get; }
@@ -78,9 +126,23 @@ public class MainViewModel : INotifyPropertyChanged
 
         _currentMode = NotationMode.FinalValue;
         _selectedColor = CellColor.None;
+        _selectedDifficulty = DifficultyLevel.Moyen;
+        _elapsedTime = TimeSpan.Zero;
+        _isPuzzleSolved = false;
+        _statusMessage = "Prêt — Clique sur une cellule, puis utilise le clavier 1 à 9 ou les boutons.";
 
-        // Maintenant, l'application démarre avec une vraie grille Sudoku jouable.
-        _grid = _sudokuGenerator.GenerateNewPuzzle(givensCount: 35);
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+
+        _timer.Tick += (_, _) =>
+        {
+            _elapsedTime = _elapsedTime.Add(TimeSpan.FromSeconds(1));
+            OnPropertyChanged(nameof(ElapsedTimeText));
+        };
+
+        _grid = _sudokuGenerator.GenerateNewPuzzle(_selectedDifficulty);
 
         Cells = new ObservableCollection<CellViewModel>(
             _grid.GetAllCells().Select(cell => new CellViewModel(cell))
@@ -90,6 +152,7 @@ public class MainViewModel : INotifyPropertyChanged
         InputNumberCommand = new RelayCommand(InputNumber);
         SetModeCommand = new RelayCommand(SetMode);
         SetColorCommand = new RelayCommand(SetColor);
+        SetDifficultyCommand = new RelayCommand(SetDifficulty);
         UndoCommand = new RelayCommand(_ => Undo());
         RedoCommand = new RelayCommand(_ => Redo());
         SaveCommand = new RelayCommand(_ => Save());
@@ -99,6 +162,7 @@ public class MainViewModel : INotifyPropertyChanged
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        StartTimer();
     }
 
     private void SelectCell(object? parameter)
@@ -152,6 +216,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         RefreshValidation();
         RefreshCells();
+        CheckIfPuzzleSolved();
     }
 
     private void SetMode(object? parameter)
@@ -203,6 +268,21 @@ public class MainViewModel : INotifyPropertyChanged
 
         RefreshValidation();
         RefreshCells();
+        CheckIfPuzzleSolved();
+    }
+
+    private void SetDifficulty(object? parameter)
+    {
+        if (parameter is DifficultyLevel difficulty)
+        {
+            SelectedDifficulty = difficulty;
+            return;
+        }
+
+        if (parameter is string text && Enum.TryParse(text, out DifficultyLevel parsedDifficulty))
+        {
+            SelectedDifficulty = parsedDifficulty;
+        }
     }
 
     private void Undo()
@@ -211,6 +291,13 @@ public class MainViewModel : INotifyPropertyChanged
 
         RefreshValidation();
         RefreshCells();
+
+        if (_isPuzzleSolved && !IsPuzzleSolved())
+        {
+            _isPuzzleSolved = false;
+            StatusMessage = "Modification effectuée — le compteur reprend.";
+            StartTimer();
+        }
     }
 
     private void Redo()
@@ -219,6 +306,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         RefreshValidation();
         RefreshCells();
+        CheckIfPuzzleSolved();
     }
 
     private void Save()
@@ -263,17 +351,20 @@ public class MainViewModel : INotifyPropertyChanged
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+
+        ResetTimer();
+        StartTimer();
+
+        StatusMessage = "Grille chargée — compteur démarré.";
+        CheckIfPuzzleSolved();
     }
 
     /// <summary>
-    /// Crée une vraie nouvelle partie Sudoku.
-    /// 
-    /// Contrairement à Reset(), cette méthode ne donne pas une grille vide.
-    /// Elle génère une grille jouable avec des chiffres donnés au départ.
+    /// Génère une nouvelle grille selon le niveau choisi par le joueur.
     /// </summary>
     private void NewGrid()
     {
-        _grid = _sudokuGenerator.GenerateNewPuzzle(givensCount: 35);
+        _grid = _sudokuGenerator.GenerateNewPuzzle(SelectedDifficulty);
 
         RebuildCellsFromGrid();
 
@@ -286,6 +377,11 @@ public class MainViewModel : INotifyPropertyChanged
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+
+        ResetTimer();
+        StartTimer();
+
+        StatusMessage = $"Nouvelle grille {SelectedDifficulty} générée — compteur démarré.";
     }
 
     private void RebuildCellsFromGrid()
@@ -371,6 +467,72 @@ public class MainViewModel : INotifyPropertyChanged
         {
             cellViewModel.Refresh();
         }
+    }
+
+    /// <summary>
+    /// Vérifie si la grille est complètement résolue.
+    /// Si oui, le compteur est arrêté.
+    /// </summary>
+    private void CheckIfPuzzleSolved()
+    {
+        if (_isPuzzleSolved)
+        {
+            return;
+        }
+
+        if (!IsPuzzleSolved())
+        {
+            return;
+        }
+
+        _isPuzzleSolved = true;
+        StopTimer();
+
+        StatusMessage = $"Grille résolue ! Temps final : {ElapsedTimeText}";
+    }
+
+    /// <summary>
+    /// Une grille est résolue si :
+    /// - toutes les cellules ont une valeur ;
+    /// - aucune règle Sudoku n'est violée.
+    /// </summary>
+    private bool IsPuzzleSolved()
+    {
+        bool allCellsFilled = _grid.GetAllCells()
+            .All(cell => cell.Value is not null);
+
+        if (!allCellsFilled)
+        {
+            return false;
+        }
+
+        return _validator.IsValid(_grid);
+    }
+
+    private void StartTimer()
+    {
+        if (!_timer.IsEnabled)
+        {
+            _timer.Start();
+        }
+    }
+
+    private void StopTimer()
+    {
+        if (_timer.IsEnabled)
+        {
+            _timer.Stop();
+        }
+    }
+
+    private void ResetTimer()
+    {
+        StopTimer();
+
+        _elapsedTime = TimeSpan.Zero;
+        _isPuzzleSolved = false;
+
+        OnPropertyChanged(nameof(ElapsedTimeText));
     }
 
     private static bool TryConvertToInt(object? parameter, out int value)

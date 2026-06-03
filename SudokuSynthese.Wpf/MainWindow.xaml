@@ -3,10 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:SudokuSynthese.Wpf.Converters"
         Title="Sudoku Synthèse"
-        Height="760"
-        Width="1100"
+        Height="800"
+        Width="1120"
         WindowStartupLocation="CenterScreen"
-        Background="#F3F4F6">
+        Background="#F3F4F6"
+        Focusable="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
         <conv:CellColorToBrushConverter x:Key="CellColorToBrushConverter" />
@@ -41,7 +43,6 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid>
-                            <!-- Bordure normale de la grille Sudoku -->
                             <Border x:Name="CellBorder"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
@@ -50,7 +51,6 @@
                                                   VerticalAlignment="Stretch"/>
                             </Border>
 
-                            <!-- Bordure bleue calculée : uniquement contour extérieur de la sélection -->
                             <Border x:Name="SelectionBorder"
                                     BorderBrush="#60A5FA"
                                     BorderThickness="{Binding SelectionBorderThickness}"
@@ -77,13 +77,11 @@
             </Setter>
 
             <Style.Triggers>
-                <!-- Cellule en erreur -->
                 <DataTrigger Binding="{Binding HasError}" Value="True">
                     <Setter Property="Background" Value="#D95F66"/>
                     <Setter Property="BorderBrush" Value="#B91C1C"/>
                 </DataTrigger>
 
-                <!-- Cellule donnée au départ -->
                 <DataTrigger Binding="{Binding IsGiven}" Value="True">
                     <Setter Property="FontWeight" Value="Bold"/>
                 </DataTrigger>
@@ -108,6 +106,30 @@
 
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right">
+
+                    <!-- Compteur de temps -->
+                    <Border Background="#1F2937"
+                            BorderBrush="#374151"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,8"
+                            Margin="5"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Temps : "
+                                       Foreground="#D1D5DB"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+
+                            <TextBlock Text="{Binding ElapsedTimeText}"
+                                       Foreground="White"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
                     <Button Content="Nouveau"
                             Command="{Binding NewGridCommand}"
                             Style="{StaticResource ToolbarButtonStyle}"/>
@@ -135,16 +157,16 @@
         <Border DockPanel.Dock="Bottom"
                 Background="#E5E7EB"
                 Padding="10">
-            <TextBlock Text="Prêt — Clic simple : sélection unique | Ctrl + clic : sélection multiple"
+            <TextBlock Text="{Binding StatusMessage}"
                        FontSize="13"
                        Foreground="#374151"/>
         </Border>
 
-        <!-- Zone centrale -->
+        <!-- Zone principale -->
         <Grid Margin="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="290"/>
+                <ColumnDefinition Width="310"/>
             </Grid.ColumnDefinitions>
 
             <!-- Grille Sudoku -->
@@ -173,7 +195,7 @@
                                     Style="{StaticResource SudokuCellButtonStyle}">
 
                                 <Grid>
-                                    <!-- Notes en coin : 4 emplacements dans les coins -->
+                                    <!-- Notes en coin -->
                                     <Grid Margin="7"
                                           HorizontalAlignment="Stretch"
                                           VerticalAlignment="Stretch">
@@ -189,52 +211,48 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Coin haut gauche -->
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="0"
                                                    Text="{Binding CornerNote1}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#2563EB"
+                                                   Foreground="#475569"
                                                    HorizontalAlignment="Left"
                                                    VerticalAlignment="Top"/>
 
-                                        <!-- Coin haut droit -->
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="2"
                                                    Text="{Binding CornerNote2}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#2563EB"
+                                                   Foreground="#475569"
                                                    HorizontalAlignment="Right"
                                                    VerticalAlignment="Top"/>
 
-                                        <!-- Coin bas gauche -->
                                         <TextBlock Grid.Row="2"
                                                    Grid.Column="0"
                                                    Text="{Binding CornerNote3}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#2563EB"
+                                                   Foreground="#475569"
                                                    HorizontalAlignment="Left"
                                                    VerticalAlignment="Bottom"/>
 
-                                        <!-- Coin bas droit -->
                                         <TextBlock Grid.Row="2"
                                                    Grid.Column="2"
                                                    Text="{Binding CornerNote4}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#2563EB"
+                                                   Foreground="#475569"
                                                    HorizontalAlignment="Right"
                                                    VerticalAlignment="Bottom"/>
                                     </Grid>
 
-                                    <!-- Notes centrales : maximum 9 chiffres sur une ou deux lignes -->
+                                    <!-- Notes centrales -->
                                     <TextBlock Text="{Binding CenterNotesDisplayText}"
                                                FontSize="11"
                                                FontWeight="SemiBold"
-                                               Foreground="#2563EB"
+                                               Foreground="#475569"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                TextAlignment="Center"
@@ -246,9 +264,22 @@
                                     <TextBlock Text="{Binding ValueText}"
                                                FontSize="28"
                                                FontWeight="Bold"
-                                               Foreground="#111827"
                                                HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <!-- Chiffre ajouté par le joueur -->
+                                                <Setter Property="Foreground" Value="#1D4ED8"/>
+
+                                                <!-- Chiffre donné au départ -->
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsGiven}" Value="True">
+                                                        <Setter Property="Foreground" Value="#111827"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </Grid>
                             </Button>
                         </DataTemplate>
@@ -267,6 +298,39 @@
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
+
+                        <TextBlock Text="Niveau de difficulté"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,10"/>
+
+                        <UniformGrid Rows="1" Columns="3">
+                            <Button Content="Facile"
+                                    Command="{Binding SetDifficultyCommand}"
+                                    CommandParameter="Facile"
+                                    Style="{StaticResource SideButtonStyle}"/>
+
+                            <Button Content="Moyen"
+                                    Command="{Binding SetDifficultyCommand}"
+                                    CommandParameter="Moyen"
+                                    Style="{StaticResource SideButtonStyle}"/>
+
+                            <Button Content="Difficile"
+                                    Command="{Binding SetDifficultyCommand}"
+                                    CommandParameter="Difficile"
+                                    Style="{StaticResource SideButtonStyle}"/>
+                        </UniformGrid>
+
+                        <TextBlock Text="{Binding SelectedDifficulty, StringFormat=Niveau actuel : {0}}"
+                                   FontSize="13"
+                                   Foreground="#374151"
+                                   Margin="4,4,0,10"/>
+
+                        <Button Content="Générer une grille"
+                                Command="{Binding NewGridCommand}"
+                                Style="{StaticResource SideButtonStyle}"/>
+
+                        <Separator Margin="0,16"/>
 
                         <TextBlock Text="Modes de saisie"
                                    FontSize="18"
@@ -338,10 +402,6 @@
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Margin="0,0,0,10"/>
-
-                        <Button Content="Nouvelle grille"
-                                Command="{Binding NewGridCommand}"
-                                Style="{StaticResource SideButtonStyle}"/>
 
                         <Button Content="Annuler"
                                 Command="{Binding UndoCommand}"

@@ -17,10 +17,22 @@ public class SudokuGenerator
     private readonly SudokuSolver _solver = new();
 
     /// <summary>
+    /// Génère une nouvelle grille selon un niveau de difficulté.
+    /// </summary>
+    /// <param name="difficulty">Niveau choisi par le joueur.</param>
+    /// <returns>Une grille Sudoku jouable.</returns>
+    public SudokuGrid GenerateNewPuzzle(DifficultyLevel difficulty)
+    {
+        int givensCount = GetGivensCount(difficulty);
+
+        return GenerateNewPuzzle(givensCount);
+    }
+
+    /// <summary>
     /// Génère une nouvelle grille Sudoku jouable.
     /// 
-    /// Le paramètre givensCount représente environ le nombre de chiffres visibles au départ.
-    /// Plus il est bas, plus la grille est difficile.
+    /// Le paramètre givensCount représente le nombre de chiffres visibles au départ.
+    /// Plus il est élevé, plus la grille est facile.
     /// </summary>
     public SudokuGrid GenerateNewPuzzle(int givensCount = 35)
     {
@@ -40,6 +52,20 @@ public class SudokuGenerator
         RemoveValuesWhileKeepingUniqueSolution(puzzle, givensCount);
 
         return ConvertToSudokuGrid(puzzle);
+    }
+
+    /// <summary>
+    /// Retourne le nombre de chiffres initiaux selon la difficulté.
+    /// </summary>
+    private static int GetGivensCount(DifficultyLevel difficulty)
+    {
+        return difficulty switch
+        {
+            DifficultyLevel.Facile => 45,
+            DifficultyLevel.Moyen => 35,
+            DifficultyLevel.Difficile => 28,
+            _ => 35
+        };
     }
 
     /// <summary>
