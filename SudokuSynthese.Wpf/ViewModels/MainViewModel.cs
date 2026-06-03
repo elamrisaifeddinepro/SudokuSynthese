@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
 using SudokuSynthese.Core.Commands;
@@ -24,6 +25,7 @@ public class MainViewModel : INotifyPropertyChanged
     private readonly SudokuValidator _validator;
     private readonly UndoRedoManager _undoRedoManager;
     private readonly SaveLoadService _saveLoadService;
+    private readonly SudokuGenerator _sudokuGenerator;
 
     private NotationMode _currentMode;
     private CellColor _selectedColor;
@@ -68,15 +70,17 @@ public class MainViewModel : INotifyPropertyChanged
 
     public MainViewModel()
     {
-        _grid = new SudokuGrid();
-
         _selectionService = new SelectionService();
         _validator = new SudokuValidator();
         _undoRedoManager = new UndoRedoManager();
         _saveLoadService = new SaveLoadService();
+        _sudokuGenerator = new SudokuGenerator();
 
         _currentMode = NotationMode.FinalValue;
         _selectedColor = CellColor.None;
+
+        // Maintenant, l'application démarre avec une vraie grille Sudoku jouable.
+        _grid = _sudokuGenerator.GenerateNewPuzzle(givensCount: 35);
 
         Cells = new ObservableCollection<CellViewModel>(
             _grid.GetAllCells().Select(cell => new CellViewModel(cell))
@@ -92,16 +96,11 @@ public class MainViewModel : INotifyPropertyChanged
         LoadCommand = new RelayCommand(_ => Load());
         NewGridCommand = new RelayCommand(_ => NewGrid());
 
+        ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
     }
 
-    /// <summary>
-    /// Sélectionne une cellule.
-    /// 
-    /// Clic simple : sélection unique.
-    /// Ctrl + clic : sélection multiple.
-    /// </summary>
     private void SelectCell(object? parameter)
     {
         if (parameter is not CellViewModel cellViewModel)
@@ -126,14 +125,6 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshCells();
     }
 
-    /// <summary>
-    /// Gère la saisie d'un chiffre selon le mode actif.
-    /// 
-    /// Mode valeur finale : place le chiffre comme grande valeur.
-    /// Mode note en coin : ajoute ou retire le chiffre dans les notes en coin.
-    /// Mode note centrale : ajoute ou retire le chiffre dans les notes centrales.
-    /// Mode couleur : ignoré ici, car les couleurs sont appliquées par SetColor().
-    /// </summary>
     private void InputNumber(object? parameter)
     {
         if (!TryConvertToInt(parameter, out int input))
@@ -163,9 +154,6 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshCells();
     }
 
-    /// <summary>
-    /// Change le mode actif : valeur finale, note coin, note centre ou couleur.
-    /// </summary>
     private void SetMode(object? parameter)
     {
         if (parameter is NotationMode notationMode)
@@ -180,12 +168,6 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Applique une couleur aux cellules sélectionnées.
-    /// 
-    /// Si aucune cellule n'est sélectionnée, la couleur devient seulement la couleur active.
-    /// Si une ou plusieurs cellules sont sélectionnées, la couleur est appliquée directement.
-    /// </summary>
     private void SetColor(object? parameter)
     {
         CellColor color;
@@ -223,9 +205,6 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshCells();
     }
 
-    /// <summary>
-    /// Annule la dernière action.
-    /// </summary>
     private void Undo()
     {
         _undoRedoManager.Undo();
@@ -234,9 +213,6 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshCells();
     }
 
-    /// <summary>
-    /// Refait la dernière action annulée.
-    /// </summary>
     private void Redo()
     {
         _undoRedoManager.Redo();
@@ -245,9 +221,6 @@ public class MainViewModel : INotifyPropertyChanged
         RefreshCells();
     }
 
-    /// <summary>
-    /// Sauvegarde la grille dans un fichier JSON.
-    /// </summary>
     private void Save()
     {
         SaveFileDialog dialog = new SaveFileDialog
@@ -265,9 +238,6 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Charge une grille depuis un fichier JSON.
-    /// </summary>
     private void Load()
     {
         OpenFileDialog dialog = new OpenFileDialog
@@ -285,37 +255,49 @@ public class MainViewModel : INotifyPropertyChanged
 
         _grid = _saveLoadService.LoadFromFile(dialog.FileName);
 
+        RebuildCellsFromGrid();
+
+        _selectionService.ClearSelection();
+        _undoRedoManager.Clear();
+
+        ApplySelectionToCells();
+        RefreshValidation();
+        RefreshCells();
+    }
+
+    /// <summary>
+    /// Crée une vraie nouvelle partie Sudoku.
+    /// 
+    /// Contrairement à Reset(), cette méthode ne donne pas une grille vide.
+    /// Elle génère une grille jouable avec des chiffres donnés au départ.
+    /// </summary>
+    private void NewGrid()
+    {
+        _grid = _sudokuGenerator.GenerateNewPuzzle(givensCount: 35);
+
+        RebuildCellsFromGrid();
+
+        _selectionService.ClearSelection();
+        _undoRedoManager.Clear();
+
+        CurrentMode = NotationMode.FinalValue;
+        SelectedColor = CellColor.None;
+
+        ApplySelectionToCells();
+        RefreshValidation();
+        RefreshCells();
+    }
+
+    private void RebuildCellsFromGrid()
+    {
         Cells.Clear();
 
         foreach (SudokuCell cell in _grid.GetAllCells())
         {
             Cells.Add(new CellViewModel(cell));
         }
-
-        _selectionService.ClearSelection();
-        _undoRedoManager.Clear();
-
-        RefreshValidation();
-        RefreshCells();
     }
 
-    /// <summary>
-    /// Réinitialise complètement la grille.
-    /// </summary>
-    private void NewGrid()
-    {
-        _grid.Reset();
-
-        _selectionService.ClearSelection();
-        _undoRedoManager.Clear();
-
-        RefreshValidation();
-        RefreshCells();
-    }
-
-    /// <summary>
-    /// Crée la bonne stratégie selon le mode actif.
-    /// </summary>
     private IInputStrategy CreateCurrentStrategy()
     {
         return CurrentMode switch
@@ -328,24 +310,49 @@ public class MainViewModel : INotifyPropertyChanged
         };
     }
 
-    /// <summary>
-    /// Applique les positions sélectionnées du SelectionService aux CellViewModel.
-    /// </summary>
     private void ApplySelectionToCells()
     {
         IReadOnlyCollection<CellPosition> selectedPositions = _selectionService.GetSelectedCells();
+
+        HashSet<CellPosition> selectedSet = selectedPositions.ToHashSet();
 
         foreach (CellViewModel cellViewModel in Cells)
         {
             CellPosition position = new CellPosition(cellViewModel.Row, cellViewModel.Column);
 
-            cellViewModel.IsSelected = selectedPositions.Contains(position);
+            bool isSelected = selectedSet.Contains(position);
+
+            cellViewModel.IsSelected = isSelected;
+
+            if (!isSelected)
+            {
+                cellViewModel.SelectionBorderThickness = new Thickness(0);
+                continue;
+            }
+
+            bool hasSelectedTop = selectedSet.Contains(
+                new CellPosition(cellViewModel.Row - 1, cellViewModel.Column));
+
+            bool hasSelectedBottom = selectedSet.Contains(
+                new CellPosition(cellViewModel.Row + 1, cellViewModel.Column));
+
+            bool hasSelectedLeft = selectedSet.Contains(
+                new CellPosition(cellViewModel.Row, cellViewModel.Column - 1));
+
+            bool hasSelectedRight = selectedSet.Contains(
+                new CellPosition(cellViewModel.Row, cellViewModel.Column + 1));
+
+            double thickness = 4;
+
+            double left = hasSelectedLeft ? 0 : thickness;
+            double top = hasSelectedTop ? 0 : thickness;
+            double right = hasSelectedRight ? 0 : thickness;
+            double bottom = hasSelectedBottom ? 0 : thickness;
+
+            cellViewModel.SelectionBorderThickness = new Thickness(left, top, right, bottom);
         }
     }
 
-    /// <summary>
-    /// Valide la grille et marque les cellules en erreur.
-    /// </summary>
     private void RefreshValidation()
     {
         IReadOnlyCollection<CellPosition> invalidPositions = _validator.GetInvalidCells(_grid);
@@ -358,9 +365,6 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Rafraîchit toutes les cellules affichées.
-    /// </summary>
     private void RefreshCells()
     {
         foreach (CellViewModel cellViewModel in Cells)
@@ -369,9 +373,6 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    /// Convertit un paramètre WPF en entier.
-    /// </summary>
     private static bool TryConvertToInt(object? parameter, out int value)
     {
         if (parameter is int intValue)

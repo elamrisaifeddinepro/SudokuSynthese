@@ -37,15 +37,53 @@
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
 
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <!-- Bordure normale de la grille Sudoku -->
+                            <Border x:Name="CellBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"/>
+                            </Border>
+
+                            <!-- Bordure bleue calculée : uniquement contour extérieur de la sélection -->
+                            <Border x:Name="SelectionBorder"
+                                    BorderBrush="#60A5FA"
+                                    BorderThickness="{Binding SelectionBorderThickness}"
+                                    Margin="0"
+                                    Opacity="0"
+                                    IsHitTestVisible="False"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CellBorder" Property="Opacity" Value="0.95"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CellBorder" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="SelectionBorder" Property="Opacity" Value="1"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="BorderBrush" Value="#2563EB"/>
-                </DataTrigger>
-
+                <!-- Cellule en erreur -->
                 <DataTrigger Binding="{Binding HasError}" Value="True">
-                    <Setter Property="BorderBrush" Value="#DC2626"/>
+                    <Setter Property="Background" Value="#D95F66"/>
+                    <Setter Property="BorderBrush" Value="#B91C1C"/>
                 </DataTrigger>
 
+                <!-- Cellule donnée au départ -->
                 <DataTrigger Binding="{Binding IsGiven}" Value="True">
                     <Setter Property="FontWeight" Value="Bold"/>
                 </DataTrigger>
@@ -135,29 +173,82 @@
                                     Style="{StaticResource SudokuCellButtonStyle}">
 
                                 <Grid>
-                                    <!-- Notes en coin -->
-                                    <TextBlock Text="{Binding CornerNotesText}"
-                                               FontSize="10"
-                                               Foreground="#6B7280"
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Top"
-                                               Margin="4,2,2,2"/>
+                                    <!-- Notes en coin : 4 emplacements dans les coins -->
+                                    <Grid Margin="7"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Coin haut gauche -->
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Text="{Binding CornerNote1}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#2563EB"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top"/>
+
+                                        <!-- Coin haut droit -->
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="2"
+                                                   Text="{Binding CornerNote2}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#2563EB"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Top"/>
+
+                                        <!-- Coin bas gauche -->
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="0"
+                                                   Text="{Binding CornerNote3}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#2563EB"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Bottom"/>
+
+                                        <!-- Coin bas droit -->
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="2"
+                                                   Text="{Binding CornerNote4}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#2563EB"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Bottom"/>
+                                    </Grid>
+
+                                    <!-- Notes centrales : maximum 9 chiffres sur une ou deux lignes -->
+                                    <TextBlock Text="{Binding CenterNotesDisplayText}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="#2563EB"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               LineHeight="13"
+                                               MaxWidth="52"/>
 
                                     <!-- Valeur principale -->
                                     <TextBlock Text="{Binding ValueText}"
-                                               FontSize="26"
+                                               FontSize="28"
                                                FontWeight="Bold"
                                                Foreground="#111827"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
-
-                                    <!-- Notes centrales -->
-                                    <TextBlock Text="{Binding CenterNotesText}"
-                                               FontSize="11"
-                                               Foreground="#374151"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Bottom"
-                                               Margin="2"/>
                                 </Grid>
                             </Button>
                         </DataTemplate>

@@ -3,15 +3,24 @@ using SudokuSynthese.Core.Models;
 namespace SudokuSynthese.Core.Commands;
 
 /// <summary>
-/// Commande permettant d'ajouter ou de supprimer une note en coin dans une cellule.
+/// Commande permettant d'ajouter, supprimer ou remplacer une note en coin dans une cellule.
 /// 
-/// Si la note existe déjà, elle est supprimée.
-/// Si la note n'existe pas, elle est ajoutée.
+/// Règles métier :
+/// - Une note en coin peut être n'importe quel chiffre entre 1 et 9.
+/// - Une cellule peut contenir au maximum 4 notes en coin.
+/// - Si la note existe déjà, elle est supprimée.
+/// - Si la note n'existe pas et qu'il y a moins de 4 notes, elle est ajoutée.
+/// - Si la note n'existe pas et qu'il y a déjà 4 notes, une ancienne note est remplacée.
 /// 
 /// Cette commande utilise le patron Memento pour permettre l'annulation.
 /// </summary>
 public class ToggleCornerNoteCommand : ISudokuCommand
 {
+    /// <summary>
+    /// Nombre maximum de notes en coin autorisées dans une cellule.
+    /// </summary>
+    private const int MaxCornerNotes = 4;
+
     /// <summary>
     /// Cellule concernée par la commande.
     /// </summary>
@@ -25,6 +34,7 @@ public class ToggleCornerNoteCommand : ISudokuCommand
 
     /// <summary>
     /// Ancien état de la cellule avant l'exécution de la commande.
+    /// Il permet de restaurer exactement l'état précédent lors d'un Undo.
     /// </summary>
     private CellMemento? _previousState;
 
@@ -51,11 +61,13 @@ public class ToggleCornerNoteCommand : ISudokuCommand
     /// <summary>
     /// Exécute la commande.
     /// 
-    /// Si la cellule est donnée au départ, aucune modification n'est faite.
-    /// Si la cellule contient déjà une valeur finale, on ne modifie pas les notes.
-    /// Sinon :
+    /// Si la cellule est donnée au départ ou si elle contient une valeur finale,
+    /// aucune note n'est modifiée.
+    /// 
+    /// Logique :
     /// - si la note existe déjà, on la supprime ;
-    /// - si elle n'existe pas, on l'ajoute.
+    /// - si elle n'existe pas et qu'il y a moins de 4 notes, on l'ajoute ;
+    /// - si elle n'existe pas et qu'il y a déjà 4 notes, on remplace une ancienne note.
     /// </summary>
     public void Execute()
     {
@@ -72,6 +84,15 @@ public class ToggleCornerNoteCommand : ISudokuCommand
         }
         else
         {
+            if (_cell.CornerNotes.Count >= MaxCornerNotes)
+            {
+                int noteToRemove = _cell.CornerNotes
+                    .OrderBy(note => note)
+                    .First();
+
+                _cell.CornerNotes.Remove(noteToRemove);
+            }
+
             _cell.CornerNotes.Add(_note);
         }
 
