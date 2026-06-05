@@ -39,6 +39,12 @@ public class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<CellViewModel> Cells { get; }
 
+    /// <summary>
+    /// Mode de saisie actuellement utilisé.
+    /// 
+    /// Il détermine le comportement d'un chiffre saisi :
+    /// valeur finale, note en coin, note centrale ou couleur.
+    /// </summary>
     public NotationMode CurrentMode
     {
         get => _currentMode;
@@ -47,11 +53,21 @@ public class MainViewModel : INotifyPropertyChanged
             if (_currentMode != value)
             {
                 _currentMode = value;
+
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsFinalValueModeSelected));
+                OnPropertyChanged(nameof(IsCornerNoteModeSelected));
+                OnPropertyChanged(nameof(IsCenterNoteModeSelected));
+                OnPropertyChanged(nameof(IsColorModeSelected));
+
+                StatusMessage = $"Mode actif : {GetModeDisplayName(CurrentMode)}.";
             }
         }
     }
 
+    /// <summary>
+    /// Couleur actuellement sélectionnée pour le mode Couleur.
+    /// </summary>
     public CellColor SelectedColor
     {
         get => _selectedColor;
@@ -60,11 +76,19 @@ public class MainViewModel : INotifyPropertyChanged
             if (_selectedColor != value)
             {
                 _selectedColor = value;
+
                 OnPropertyChanged();
+                RefreshColorSelectionProperties();
             }
         }
     }
 
+    /// <summary>
+    /// Niveau de difficulté choisi par le joueur.
+    /// 
+    /// Il influence le nombre de chiffres donnés
+    /// au moment de la génération d'une nouvelle grille.
+    /// </summary>
     public DifficultyLevel SelectedDifficulty
     {
         get => _selectedDifficulty;
@@ -73,24 +97,119 @@ public class MainViewModel : INotifyPropertyChanged
             if (_selectedDifficulty != value)
             {
                 _selectedDifficulty = value;
+
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsEasyDifficultySelected));
+                OnPropertyChanged(nameof(IsMediumDifficultySelected));
+                OnPropertyChanged(nameof(IsHardDifficultySelected));
+
+                StatusMessage = $"Niveau sélectionné : {SelectedDifficulty}. Clique sur Générer une grille pour commencer une nouvelle partie.";
             }
         }
     }
 
     /// <summary>
-    /// Temps écoulé depuis le début de la grille actuelle.
+    /// Indique si le niveau Facile est sélectionné.
     /// </summary>
-    public string ElapsedTimeText
-    {
-        get
-        {
-            return _elapsedTime.ToString(@"mm\:ss");
-        }
-    }
+    public bool IsEasyDifficultySelected => SelectedDifficulty == DifficultyLevel.Facile;
 
     /// <summary>
-    /// Message affiché dans la barre inférieure.
+    /// Indique si le niveau Moyen est sélectionné.
+    /// </summary>
+    public bool IsMediumDifficultySelected => SelectedDifficulty == DifficultyLevel.Moyen;
+
+    /// <summary>
+    /// Indique si le niveau Difficile est sélectionné.
+    /// </summary>
+    public bool IsHardDifficultySelected => SelectedDifficulty == DifficultyLevel.Difficile;
+
+    /// <summary>
+    /// Indique si le mode Valeur finale est actif.
+    /// </summary>
+    public bool IsFinalValueModeSelected => CurrentMode == NotationMode.FinalValue;
+
+    /// <summary>
+    /// Indique si le mode Note en coin est actif.
+    /// </summary>
+    public bool IsCornerNoteModeSelected => CurrentMode == NotationMode.CornerNote;
+
+    /// <summary>
+    /// Indique si le mode Note centrale est actif.
+    /// </summary>
+    public bool IsCenterNoteModeSelected => CurrentMode == NotationMode.CenterNote;
+
+    /// <summary>
+    /// Indique si le mode Couleur est actif.
+    /// </summary>
+    public bool IsColorModeSelected => CurrentMode == NotationMode.Color;
+
+    /// <summary>
+    /// Indique si aucune couleur est sélectionnée.
+    /// </summary>
+    public bool IsNoColorSelected => SelectedColor == CellColor.None;
+
+    /// <summary>
+    /// Indique si la couleur Bleue est sélectionnée.
+    /// </summary>
+    public bool IsBlueColorSelected => SelectedColor == CellColor.Blue;
+
+    /// <summary>
+    /// Indique si la couleur Verte est sélectionnée.
+    /// </summary>
+    public bool IsGreenColorSelected => SelectedColor == CellColor.Green;
+
+    /// <summary>
+    /// Indique si la couleur Jaune est sélectionnée.
+    /// </summary>
+    public bool IsYellowColorSelected => SelectedColor == CellColor.Yellow;
+
+    /// <summary>
+    /// Indique si la couleur Rouge est sélectionnée.
+    /// </summary>
+    public bool IsRedColorSelected => SelectedColor == CellColor.Red;
+
+    /// <summary>
+    /// Indique si la couleur Violette est sélectionnée.
+    /// </summary>
+    public bool IsPurpleColorSelected => SelectedColor == CellColor.Purple;
+
+    /// <summary>
+    /// Indique si la couleur Orange est sélectionnée.
+    /// </summary>
+    public bool IsOrangeColorSelected => SelectedColor == CellColor.Orange;
+
+    /// <summary>
+    /// Indique si la couleur Rose est sélectionnée.
+    /// </summary>
+    public bool IsPinkColorSelected => SelectedColor == CellColor.Pink;
+
+    /// <summary>
+    /// Indique si la couleur Grise est sélectionnée.
+    /// </summary>
+    public bool IsGrayColorSelected => SelectedColor == CellColor.Gray;
+
+    /// <summary>
+    /// Indique si la couleur Cyan est sélectionnée.
+    /// </summary>
+    public bool IsCyanColorSelected => SelectedColor == CellColor.Cyan;
+
+    /// <summary>
+    /// Indique s'il existe au moins une action à annuler.
+    /// </summary>
+    public bool CanUndo => _undoRedoManager.CanUndo;
+
+    /// <summary>
+    /// Indique s'il existe au moins une action à refaire.
+    /// </summary>
+    public bool CanRedo => _undoRedoManager.CanRedo;
+
+    /// <summary>
+    /// Temps écoulé depuis le début de la grille actuelle.
+    /// </summary>
+    public string ElapsedTimeText => _elapsedTime.ToString(@"mm\:ss");
+
+    /// <summary>
+    /// Message affiché dans la barre de statut.
     /// </summary>
     public string StatusMessage
     {
@@ -157,14 +276,21 @@ public class MainViewModel : INotifyPropertyChanged
         RedoCommand = new RelayCommand(_ => Redo());
         SaveCommand = new RelayCommand(_ => Save());
         LoadCommand = new RelayCommand(_ => Load());
-        NewGridCommand = new RelayCommand(_ => NewGrid());
+        NewGridCommand = new RelayCommand(_ => RequestNewGrid());
 
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
         StartTimer();
     }
 
+    /// <summary>
+    /// Sélectionne une cellule.
+    /// 
+    /// Clic simple : sélection unique.
+    /// Ctrl + clic : sélection multiple.
+    /// </summary>
     private void SelectCell(object? parameter)
     {
         if (parameter is not CellViewModel cellViewModel)
@@ -179,16 +305,21 @@ public class MainViewModel : INotifyPropertyChanged
         if (isCtrlPressed)
         {
             _selectionService.ToggleSelection(position);
+            StatusMessage = "Sélection multiple mise à jour.";
         }
         else
         {
             _selectionService.SelectSingle(position);
+            StatusMessage = $"Cellule sélectionnée : ligne {cellViewModel.Row + 1}, colonne {cellViewModel.Column + 1}.";
         }
 
         ApplySelectionToCells();
         RefreshCells();
     }
 
+    /// <summary>
+    /// Traite la saisie d'un chiffre selon le mode actif.
+    /// </summary>
     private void InputNumber(object? parameter)
     {
         if (!TryConvertToInt(parameter, out int input))
@@ -200,11 +331,13 @@ public class MainViewModel : INotifyPropertyChanged
 
         if (selectedCells.Count == 0)
         {
+            StatusMessage = "Aucune cellule sélectionnée.";
             return;
         }
 
         if (CurrentMode == NotationMode.Color)
         {
+            StatusMessage = "Mode Couleur actif — choisis une couleur dans la palette.";
             return;
         }
 
@@ -214,11 +347,21 @@ public class MainViewModel : INotifyPropertyChanged
 
         _undoRedoManager.ExecuteCommand(command);
 
+        ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
+
+        StatusMessage = selectedCells.Count == 1
+            ? $"Chiffre {input} appliqué en mode {GetModeDisplayName(CurrentMode)}."
+            : $"Chiffre {input} appliqué à {selectedCells.Count} cellules en mode {GetModeDisplayName(CurrentMode)}.";
+
         CheckIfPuzzleSolved();
     }
 
+    /// <summary>
+    /// Change le mode de saisie courant.
+    /// </summary>
     private void SetMode(object? parameter)
     {
         if (parameter is NotationMode notationMode)
@@ -233,6 +376,11 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Applique une couleur aux cellules sélectionnées.
+    /// 
+    /// La couleur choisie devient aussi la couleur active.
+    /// </summary>
     private void SetColor(object? parameter)
     {
         CellColor color;
@@ -257,6 +405,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         if (selectedCells.Count == 0)
         {
+            StatusMessage = $"Couleur active : {GetColorDisplayName(SelectedColor)}. Sélectionne une cellule pour l'appliquer.";
             return;
         }
 
@@ -266,11 +415,21 @@ public class MainViewModel : INotifyPropertyChanged
 
         _undoRedoManager.ExecuteCommand(command);
 
+        ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
+
+        StatusMessage = selectedCells.Count == 1
+            ? $"Couleur {GetColorDisplayName(SelectedColor)} appliquée."
+            : $"Couleur {GetColorDisplayName(SelectedColor)} appliquée à {selectedCells.Count} cellules.";
+
         CheckIfPuzzleSolved();
     }
 
+    /// <summary>
+    /// Change le niveau de difficulté sélectionné.
+    /// </summary>
     private void SetDifficulty(object? parameter)
     {
         if (parameter is DifficultyLevel difficulty)
@@ -285,12 +444,25 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Undo()
+    /// <summary>
+    /// Annule la dernière action du joueur.
+    /// </summary>
+    public void Undo()
     {
+        if (!CanUndo)
+        {
+            StatusMessage = "Aucune action à annuler.";
+            return;
+        }
+
         _undoRedoManager.Undo();
 
+        ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
+
+        StatusMessage = "Dernière action annulée.";
 
         if (_isPuzzleSolved && !IsPuzzleSolved())
         {
@@ -300,16 +472,33 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Redo()
+    /// <summary>
+    /// Rétablit la dernière action annulée.
+    /// </summary>
+    public void Redo()
     {
+        if (!CanRedo)
+        {
+            StatusMessage = "Aucune action à refaire.";
+            return;
+        }
+
         _undoRedoManager.Redo();
 
+        ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
+
+        StatusMessage = "Action rétablie.";
+
         CheckIfPuzzleSolved();
     }
 
-    private void Save()
+    /// <summary>
+    /// Sauvegarde la grille courante dans un fichier JSON.
+    /// </summary>
+    public void Save()
     {
         SaveFileDialog dialog = new SaveFileDialog
         {
@@ -323,10 +512,18 @@ public class MainViewModel : INotifyPropertyChanged
         if (result == true)
         {
             _saveLoadService.SaveToFile(_grid, dialog.FileName);
+            StatusMessage = "Grille sauvegardée avec succès.";
+        }
+        else
+        {
+            StatusMessage = "Sauvegarde annulée.";
         }
     }
 
-    private void Load()
+    /// <summary>
+    /// Charge une grille depuis un fichier JSON.
+    /// </summary>
+    public void Load()
     {
         OpenFileDialog dialog = new OpenFileDialog
         {
@@ -338,6 +535,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         if (result != true)
         {
+            StatusMessage = "Chargement annulé.";
             return;
         }
 
@@ -351,6 +549,7 @@ public class MainViewModel : INotifyPropertyChanged
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
 
         ResetTimer();
         StartTimer();
@@ -360,7 +559,27 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Génère une nouvelle grille selon le niveau choisi par le joueur.
+    /// Demande une confirmation avant de créer une nouvelle grille.
+    /// </summary>
+    public void RequestNewGrid()
+    {
+        MessageBoxResult result = MessageBox.Show(
+            "Voulez-vous vraiment commencer une nouvelle grille ?\n\nLa partie actuelle sera remplacée.",
+            "Nouvelle grille",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            StatusMessage = "Nouvelle grille annulée.";
+            return;
+        }
+
+        NewGrid();
+    }
+
+    /// <summary>
+    /// Génère une nouvelle grille selon le niveau choisi.
     /// </summary>
     private void NewGrid()
     {
@@ -377,6 +596,7 @@ public class MainViewModel : INotifyPropertyChanged
         ApplySelectionToCells();
         RefreshValidation();
         RefreshCells();
+        RefreshUndoRedoState();
 
         ResetTimer();
         StartTimer();
@@ -384,6 +604,22 @@ public class MainViewModel : INotifyPropertyChanged
         StatusMessage = $"Nouvelle grille {SelectedDifficulty} générée — compteur démarré.";
     }
 
+    /// <summary>
+    /// Vide la sélection courante.
+    /// </summary>
+    public void ClearSelection()
+    {
+        _selectionService.ClearSelection();
+
+        ApplySelectionToCells();
+        RefreshCells();
+
+        StatusMessage = "Sélection vidée.";
+    }
+
+    /// <summary>
+    /// Reconstruit les CellViewModel à partir de la grille métier.
+    /// </summary>
     private void RebuildCellsFromGrid()
     {
         Cells.Clear();
@@ -394,6 +630,9 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Crée la stratégie correspondant au mode courant.
+    /// </summary>
     private IInputStrategy CreateCurrentStrategy()
     {
         return CurrentMode switch
@@ -406,11 +645,22 @@ public class MainViewModel : INotifyPropertyChanged
         };
     }
 
+    /// <summary>
+    /// Applique visuellement la sélection aux cellules.
+    /// 
+    /// La méthode calcule aussi les cellules liées à la sélection :
+    /// même ligne, même colonne, même bloc et même valeur.
+    /// </summary>
     private void ApplySelectionToCells()
     {
         IReadOnlyCollection<CellPosition> selectedPositions = _selectionService.GetSelectedCells();
-
         HashSet<CellPosition> selectedSet = selectedPositions.ToHashSet();
+
+        HashSet<int> selectedValues = Cells
+            .Where(cellViewModel => selectedSet.Contains(new CellPosition(cellViewModel.Row, cellViewModel.Column)))
+            .Where(cellViewModel => cellViewModel.Value is not null)
+            .Select(cellViewModel => cellViewModel.Value!.Value)
+            .ToHashSet();
 
         foreach (CellViewModel cellViewModel in Cells)
         {
@@ -419,6 +669,12 @@ public class MainViewModel : INotifyPropertyChanged
             bool isSelected = selectedSet.Contains(position);
 
             cellViewModel.IsSelected = isSelected;
+
+            cellViewModel.IsPeer = !isSelected && IsPeerOfSelection(cellViewModel, selectedSet);
+
+            cellViewModel.IsSameValue =
+                cellViewModel.Value is not null &&
+                selectedValues.Contains(cellViewModel.Value.Value);
 
             if (!isSelected)
             {
@@ -449,6 +705,34 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Indique si une cellule est liée à la sélection courante.
+    /// </summary>
+    private static bool IsPeerOfSelection(
+        CellViewModel cellViewModel,
+        HashSet<CellPosition> selectedSet)
+    {
+        foreach (CellPosition selectedPosition in selectedSet)
+        {
+            bool sameRow = cellViewModel.Row == selectedPosition.Row;
+            bool sameColumn = cellViewModel.Column == selectedPosition.Column;
+
+            bool sameBlock =
+                cellViewModel.Row / 3 == selectedPosition.Row / 3 &&
+                cellViewModel.Column / 3 == selectedPosition.Column / 3;
+
+            if (sameRow || sameColumn || sameBlock)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Valide la grille et marque les cellules en erreur.
+    /// </summary>
     private void RefreshValidation()
     {
         IReadOnlyCollection<CellPosition> invalidPositions = _validator.GetInvalidCells(_grid);
@@ -461,6 +745,9 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Rafraîchit toutes les cellules affichées.
+    /// </summary>
     private void RefreshCells()
     {
         foreach (CellViewModel cellViewModel in Cells)
@@ -470,8 +757,10 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Vérifie si la grille est complètement résolue.
-    /// Si oui, le compteur est arrêté.
+    /// Vérifie si la grille est résolue.
+    /// 
+    /// Si la grille est complète et valide,
+    /// le compteur de temps est arrêté.
     /// </summary>
     private void CheckIfPuzzleSolved()
     {
@@ -488,13 +777,17 @@ public class MainViewModel : INotifyPropertyChanged
         _isPuzzleSolved = true;
         StopTimer();
 
-        StatusMessage = $"Grille résolue ! Temps final : {ElapsedTimeText}";
+        StatusMessage = $"Bravo ! Grille résolue en {ElapsedTimeText}.";
+
+        MessageBox.Show(
+            $"Bravo !\n\nTu as résolu la grille en {ElapsedTimeText}.",
+            "Grille résolue",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     /// <summary>
-    /// Une grille est résolue si :
-    /// - toutes les cellules ont une valeur ;
-    /// - aucune règle Sudoku n'est violée.
+    /// Indique si la grille est complètement résolue.
     /// </summary>
     private bool IsPuzzleSolved()
     {
@@ -509,6 +802,35 @@ public class MainViewModel : INotifyPropertyChanged
         return _validator.IsValid(_grid);
     }
 
+    /// <summary>
+    /// Rafraîchit les propriétés liées à la couleur sélectionnée.
+    /// </summary>
+    private void RefreshColorSelectionProperties()
+    {
+        OnPropertyChanged(nameof(IsNoColorSelected));
+        OnPropertyChanged(nameof(IsBlueColorSelected));
+        OnPropertyChanged(nameof(IsGreenColorSelected));
+        OnPropertyChanged(nameof(IsYellowColorSelected));
+        OnPropertyChanged(nameof(IsRedColorSelected));
+        OnPropertyChanged(nameof(IsPurpleColorSelected));
+        OnPropertyChanged(nameof(IsOrangeColorSelected));
+        OnPropertyChanged(nameof(IsPinkColorSelected));
+        OnPropertyChanged(nameof(IsGrayColorSelected));
+        OnPropertyChanged(nameof(IsCyanColorSelected));
+    }
+
+    /// <summary>
+    /// Rafraîchit les propriétés indiquant l'état Undo / Redo.
+    /// </summary>
+    private void RefreshUndoRedoState()
+    {
+        OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanRedo));
+    }
+
+    /// <summary>
+    /// Démarre le compteur de temps.
+    /// </summary>
     private void StartTimer()
     {
         if (!_timer.IsEnabled)
@@ -517,6 +839,9 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Arrête le compteur de temps.
+    /// </summary>
     private void StopTimer()
     {
         if (_timer.IsEnabled)
@@ -525,6 +850,9 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Réinitialise le compteur de temps.
+    /// </summary>
     private void ResetTimer()
     {
         StopTimer();
@@ -535,6 +863,45 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ElapsedTimeText));
     }
 
+    /// <summary>
+    /// Retourne le nom lisible d'un mode de saisie.
+    /// </summary>
+    private static string GetModeDisplayName(NotationMode mode)
+    {
+        return mode switch
+        {
+            NotationMode.FinalValue => "Valeur finale",
+            NotationMode.CornerNote => "Note en coin",
+            NotationMode.CenterNote => "Note centrale",
+            NotationMode.Color => "Couleur",
+            _ => mode.ToString()
+        };
+    }
+
+    /// <summary>
+    /// Retourne le nom lisible d'une couleur.
+    /// </summary>
+    private static string GetColorDisplayName(CellColor color)
+    {
+        return color switch
+        {
+            CellColor.None => "Aucune",
+            CellColor.Blue => "Bleu",
+            CellColor.Green => "Vert",
+            CellColor.Yellow => "Jaune",
+            CellColor.Red => "Rouge",
+            CellColor.Purple => "Violet",
+            CellColor.Orange => "Orange",
+            CellColor.Pink => "Rose",
+            CellColor.Gray => "Gris",
+            CellColor.Cyan => "Cyan",
+            _ => color.ToString()
+        };
+    }
+
+    /// <summary>
+    /// Convertit un paramètre WPF en entier.
+    /// </summary>
     private static bool TryConvertToInt(object? parameter, out int value)
     {
         if (parameter is int intValue)

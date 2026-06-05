@@ -1,117 +1,44 @@
 ﻿<Window x:Class="SudokuSynthese.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:conv="clr-namespace:SudokuSynthese.Wpf.Converters"
         Title="Sudoku Synthèse"
-        Height="800"
-        Width="1120"
+        Height="820"
+        Width="1180"
         WindowStartupLocation="CenterScreen"
-        Background="#F3F4F6"
+        Background="{StaticResource Brush.AppBackground}"
         Focusable="True"
         PreviewKeyDown="Window_PreviewKeyDown">
 
-    <Window.Resources>
-        <conv:CellColorToBrushConverter x:Key="CellColorToBrushConverter" />
-
-        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style x:Key="SideButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="MinWidth" Value="48"/>
-            <Setter Property="MinHeight" Value="40"/>
-        </Style>
-
-        <Style x:Key="SudokuCellButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{Binding Color, Converter={StaticResource CellColorToBrushConverter}}"/>
-            <Setter Property="BorderBrush" Value="#111827"/>
-            <Setter Property="BorderThickness" Value="{Binding BorderThickness}"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Border x:Name="CellBorder"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}">
-                                <ContentPresenter HorizontalAlignment="Stretch"
-                                                  VerticalAlignment="Stretch"/>
-                            </Border>
-
-                            <Border x:Name="SelectionBorder"
-                                    BorderBrush="#60A5FA"
-                                    BorderThickness="{Binding SelectionBorderThickness}"
-                                    Margin="0"
-                                    Opacity="0"
-                                    IsHitTestVisible="False"/>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CellBorder" Property="Opacity" Value="0.95"/>
-                            </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="CellBorder" Property="Opacity" Value="0.85"/>
-                            </Trigger>
-
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter TargetName="SelectionBorder" Property="Opacity" Value="1"/>
-                            </DataTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasError}" Value="True">
-                    <Setter Property="Background" Value="#D95F66"/>
-                    <Setter Property="BorderBrush" Value="#B91C1C"/>
-                </DataTrigger>
-
-                <DataTrigger Binding="{Binding IsGiven}" Value="True">
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
-
     <DockPanel>
 
-        <!-- Barre supérieure -->
+        <!--
+            Barre supérieure de l'application.
+
+            Elle contient le titre, le compteur de temps
+            et les actions principales de la partie.
+        -->
         <Border DockPanel.Dock="Top"
-                Background="#111827"
-                Padding="12">
+                Background="{StaticResource Brush.TopBar}"
+                Padding="14">
             <DockPanel>
                 <TextBlock Text="Sudoku Synthèse"
-                           Foreground="White"
-                           FontSize="22"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"
+                           Style="{StaticResource TitleTextStyle}"
                            DockPanel.Dock="Left"
-                           Margin="0,0,30,0"/>
+                           Margin="0,0,30,0" />
 
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right">
 
-                    <!-- Compteur de temps -->
-                    <Border Background="#1F2937"
+                    <!--
+                        Compteur de temps.
+
+                        Il affiche le temps passé sur la grille courante.
+                        Le compteur est mis à jour par le MainViewModel.
+                    -->
+                    <Border Background="{StaticResource Brush.TopBarAlt}"
                             BorderBrush="#374151"
                             BorderThickness="1"
-                            CornerRadius="6"
+                            CornerRadius="{StaticResource Radius.Chip}"
                             Padding="12,8"
                             Margin="5"
                             VerticalAlignment="Center">
@@ -120,95 +47,114 @@
                                        Foreground="#D1D5DB"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center" />
 
                             <TextBlock Text="{Binding ElapsedTimeText}"
-                                       Foreground="White"
+                                       Foreground="{StaticResource Brush.TextLight}"
                                        FontSize="16"
                                        FontWeight="Bold"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
 
                     <Button Content="Nouveau"
                             Command="{Binding NewGridCommand}"
-                            Style="{StaticResource ToolbarButtonStyle}"/>
+                            Style="{StaticResource ToolbarButtonStyle}" />
 
                     <Button Content="Sauvegarder"
                             Command="{Binding SaveCommand}"
-                            Style="{StaticResource ToolbarButtonStyle}"/>
+                            Style="{StaticResource ToolbarButtonStyle}" />
 
                     <Button Content="Charger"
                             Command="{Binding LoadCommand}"
-                            Style="{StaticResource ToolbarButtonStyle}"/>
+                            Style="{StaticResource ToolbarButtonStyle}" />
 
                     <Button Content="Undo"
                             Command="{Binding UndoCommand}"
-                            Style="{StaticResource ToolbarButtonStyle}"/>
+                            IsEnabled="{Binding CanUndo}"
+                            Style="{StaticResource ToolbarButtonStyle}" />
 
                     <Button Content="Redo"
                             Command="{Binding RedoCommand}"
-                            Style="{StaticResource ToolbarButtonStyle}"/>
+                            IsEnabled="{Binding CanRedo}"
+                            Style="{StaticResource ToolbarButtonStyle}" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Barre inférieure -->
+        <!--
+            Barre de statut.
+
+            Elle affiche les messages informatifs transmis par le ViewModel :
+            aide, génération de grille, erreurs ou réussite.
+        -->
         <Border DockPanel.Dock="Bottom"
-                Background="#E5E7EB"
+                Background="{StaticResource Brush.SurfaceAlt}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1,1,0,0"
                 Padding="10">
             <TextBlock Text="{Binding StatusMessage}"
-                       FontSize="13"
-                       Foreground="#374151"/>
+                       Style="{StaticResource MutedTextStyle}" />
         </Border>
 
-        <!-- Zone principale -->
-        <Grid Margin="20">
+        <!--
+            Zone principale.
+
+            Elle contient la grille Sudoku à gauche
+            et le panneau de contrôle à droite.
+        -->
+        <Grid Margin="22">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="310"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="330" />
             </Grid.ColumnDefinitions>
 
-            <!-- Grille Sudoku -->
+            <!--
+                Carte de la grille Sudoku.
+
+                Elle affiche les 81 cellules sous forme de grille 9 x 9.
+                Chaque cellule est liée à un CellViewModel.
+            -->
             <Border Grid.Column="0"
-                    Background="White"
-                    Padding="14"
-                    CornerRadius="12"
-                    BorderBrush="#D1D5DB"
-                    BorderThickness="1"
+                    Style="{StaticResource CardBorderStyle}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
 
                 <ItemsControl ItemsSource="{Binding Cells}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <UniformGrid Rows="9" Columns="9"/>
+                            <UniformGrid Rows="9" Columns="9" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
 
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Width="58"
-                                    Height="58"
+                            <Button Width="60"
+                                    Height="60"
                                     Command="{Binding DataContext.SelectCellCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource SudokuCellButtonStyle}">
 
                                 <Grid>
-                                    <!-- Notes en coin -->
+                                    <!--
+                                        Notes en coin.
+
+                                        Les quatre notes affichées correspondent
+                                        aux quatre emplacements visuels de la cellule.
+                                    -->
                                     <Grid Margin="7"
                                           HorizontalAlignment="Stretch"
                                           VerticalAlignment="Stretch">
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
 
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0"
@@ -216,65 +162,73 @@
                                                    Text="{Binding CornerNote1}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#475569"
+                                                   Foreground="{StaticResource Brush.NoteText}"
                                                    HorizontalAlignment="Left"
-                                                   VerticalAlignment="Top"/>
+                                                   VerticalAlignment="Top" />
 
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="2"
                                                    Text="{Binding CornerNote2}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#475569"
+                                                   Foreground="{StaticResource Brush.NoteText}"
                                                    HorizontalAlignment="Right"
-                                                   VerticalAlignment="Top"/>
+                                                   VerticalAlignment="Top" />
 
                                         <TextBlock Grid.Row="2"
                                                    Grid.Column="0"
                                                    Text="{Binding CornerNote3}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#475569"
+                                                   Foreground="{StaticResource Brush.NoteText}"
                                                    HorizontalAlignment="Left"
-                                                   VerticalAlignment="Bottom"/>
+                                                   VerticalAlignment="Bottom" />
 
                                         <TextBlock Grid.Row="2"
                                                    Grid.Column="2"
                                                    Text="{Binding CornerNote4}"
                                                    FontSize="10"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#475569"
+                                                   Foreground="{StaticResource Brush.NoteText}"
                                                    HorizontalAlignment="Right"
-                                                   VerticalAlignment="Bottom"/>
+                                                   VerticalAlignment="Bottom" />
                                     </Grid>
 
-                                    <!-- Notes centrales -->
+                                    <!--
+                                        Notes centrales.
+
+                                        Elles permettent d'afficher plusieurs candidats
+                                        au centre de la cellule sur une ou deux lignes.
+                                    -->
                                     <TextBlock Text="{Binding CenterNotesDisplayText}"
                                                FontSize="11"
                                                FontWeight="SemiBold"
-                                               Foreground="#475569"
+                                               Foreground="{StaticResource Brush.NoteText}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                TextAlignment="Center"
                                                TextWrapping="Wrap"
                                                LineHeight="13"
-                                               MaxWidth="52"/>
+                                               MaxWidth="52" />
 
-                                    <!-- Valeur principale -->
+                                    <!--
+                                        Valeur principale.
+
+                                        Les chiffres donnés au départ sont affichés en noir.
+                                        Les chiffres ajoutés par le joueur sont affichés en bleu.
+                                    -->
                                     <TextBlock Text="{Binding ValueText}"
-                                               FontSize="28"
+                                               FontSize="30"
                                                FontWeight="Bold"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <!-- Chiffre ajouté par le joueur -->
-                                                <Setter Property="Foreground" Value="#1D4ED8"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.UserValueText}" />
 
-                                                <!-- Chiffre donné au départ -->
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsGiven}" Value="True">
-                                                        <Setter Property="Foreground" Value="#111827"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.GivenText}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -287,129 +241,334 @@
                 </ItemsControl>
             </Border>
 
-            <!-- Panneau latéral -->
+            <!--
+                Panneau latéral.
+
+                Il regroupe les actions du joueur :
+                difficulté, mode de saisie, chiffres, couleurs et actions rapides.
+            -->
             <Border Grid.Column="1"
-                    Background="White"
-                    Padding="16"
-                    CornerRadius="12"
-                    BorderBrush="#D1D5DB"
-                    BorderThickness="1"
-                    Margin="20,0,0,0">
+                    Style="{StaticResource CardBorderStyle}"
+                    Margin="22,0,0,0">
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
 
+                        <!--
+                            Section de difficulté.
+
+                            Le joueur choisit le niveau souhaité,
+                            puis génère une nouvelle grille.
+                        -->
                         <TextBlock Text="Niveau de difficulté"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
+                                   Style="{StaticResource SectionTitleTextStyle}" />
 
                         <UniformGrid Rows="1" Columns="3">
-                            <Button Content="Facile"
-                                    Command="{Binding SetDifficultyCommand}"
-                                    CommandParameter="Facile"
-                                    Style="{StaticResource SideButtonStyle}"/>
+                            <RadioButton Content="Facile"
+                                         GroupName="DifficultyGroup"
+                                         IsChecked="{Binding IsEasyDifficultySelected, Mode=OneWay}"
+                                         Command="{Binding SetDifficultyCommand}"
+                                         CommandParameter="Facile"
+                                         Style="{StaticResource SelectableButtonStyle}" />
 
-                            <Button Content="Moyen"
-                                    Command="{Binding SetDifficultyCommand}"
-                                    CommandParameter="Moyen"
-                                    Style="{StaticResource SideButtonStyle}"/>
+                            <RadioButton Content="Moyen"
+                                         GroupName="DifficultyGroup"
+                                         IsChecked="{Binding IsMediumDifficultySelected, Mode=OneWay}"
+                                         Command="{Binding SetDifficultyCommand}"
+                                         CommandParameter="Moyen"
+                                         Style="{StaticResource SelectableButtonStyle}" />
 
-                            <Button Content="Difficile"
-                                    Command="{Binding SetDifficultyCommand}"
-                                    CommandParameter="Difficile"
-                                    Style="{StaticResource SideButtonStyle}"/>
+                            <RadioButton Content="Difficile"
+                                         GroupName="DifficultyGroup"
+                                         IsChecked="{Binding IsHardDifficultySelected, Mode=OneWay}"
+                                         Command="{Binding SetDifficultyCommand}"
+                                         CommandParameter="Difficile"
+                                         Style="{StaticResource SelectableButtonStyle}" />
                         </UniformGrid>
 
                         <TextBlock Text="{Binding SelectedDifficulty, StringFormat=Niveau actuel : {0}}"
-                                   FontSize="13"
-                                   Foreground="#374151"
-                                   Margin="4,4,0,10"/>
+                                   Style="{StaticResource MutedTextStyle}"
+                                   Margin="4,4,0,10" />
 
                         <Button Content="Générer une grille"
                                 Command="{Binding NewGridCommand}"
-                                Style="{StaticResource SideButtonStyle}"/>
+                                Style="{StaticResource PrimaryButtonStyle}" />
 
-                        <Separator Margin="0,16"/>
+                        <Separator Margin="0,18" />
 
+                        <!--
+                            Section des modes de saisie.
+
+                            Le mode choisi détermine le comportement
+                            d'un chiffre saisi par bouton ou par clavier.
+                        -->
                         <TextBlock Text="Modes de saisie"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
+                                   Style="{StaticResource SectionTitleTextStyle}" />
 
-                        <Button Content="Valeur finale"
-                                Command="{Binding SetModeCommand}"
-                                CommandParameter="FinalValue"
-                                Style="{StaticResource SideButtonStyle}"/>
+                        <RadioButton Content="Valeur finale"
+                                     GroupName="InputModeGroup"
+                                     IsChecked="{Binding IsFinalValueModeSelected, Mode=OneWay}"
+                                     Command="{Binding SetModeCommand}"
+                                     CommandParameter="FinalValue"
+                                     Style="{StaticResource SelectableButtonStyle}" />
 
-                        <Button Content="Note en coin"
-                                Command="{Binding SetModeCommand}"
-                                CommandParameter="CornerNote"
-                                Style="{StaticResource SideButtonStyle}"/>
+                        <RadioButton Content="Note en coin"
+                                     GroupName="InputModeGroup"
+                                     IsChecked="{Binding IsCornerNoteModeSelected, Mode=OneWay}"
+                                     Command="{Binding SetModeCommand}"
+                                     CommandParameter="CornerNote"
+                                     Style="{StaticResource SelectableButtonStyle}" />
 
-                        <Button Content="Note centrale"
-                                Command="{Binding SetModeCommand}"
-                                CommandParameter="CenterNote"
-                                Style="{StaticResource SideButtonStyle}"/>
+                        <RadioButton Content="Note centrale"
+                                     GroupName="InputModeGroup"
+                                     IsChecked="{Binding IsCenterNoteModeSelected, Mode=OneWay}"
+                                     Command="{Binding SetModeCommand}"
+                                     CommandParameter="CenterNote"
+                                     Style="{StaticResource SelectableButtonStyle}" />
 
-                        <Button Content="Couleur"
-                                Command="{Binding SetModeCommand}"
-                                CommandParameter="Color"
-                                Style="{StaticResource SideButtonStyle}"/>
+                        <RadioButton Content="Couleur"
+                                     GroupName="InputModeGroup"
+                                     IsChecked="{Binding IsColorModeSelected, Mode=OneWay}"
+                                     Command="{Binding SetModeCommand}"
+                                     CommandParameter="Color"
+                                     Style="{StaticResource SelectableButtonStyle}" />
 
-                        <Separator Margin="0,16"/>
+                        <Separator Margin="0,18" />
 
+                        <!--
+                            Section des chiffres.
+
+                            Ces boutons permettent de saisir une valeur
+                            ou une note dans les cellules sélectionnées.
+                        -->
                         <TextBlock Text="Chiffres"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
+                                   Style="{StaticResource SectionTitleTextStyle}" />
 
                         <UniformGrid Rows="3" Columns="3">
-                            <Button Content="1" Command="{Binding InputNumberCommand}" CommandParameter="1" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="2" Command="{Binding InputNumberCommand}" CommandParameter="2" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="3" Command="{Binding InputNumberCommand}" CommandParameter="3" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="4" Command="{Binding InputNumberCommand}" CommandParameter="4" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="5" Command="{Binding InputNumberCommand}" CommandParameter="5" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="6" Command="{Binding InputNumberCommand}" CommandParameter="6" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="7" Command="{Binding InputNumberCommand}" CommandParameter="7" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="8" Command="{Binding InputNumberCommand}" CommandParameter="8" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="9" Command="{Binding InputNumberCommand}" CommandParameter="9" Style="{StaticResource SideButtonStyle}"/>
+                            <Button Content="1" Command="{Binding InputNumberCommand}" CommandParameter="1" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="2" Command="{Binding InputNumberCommand}" CommandParameter="2" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="3" Command="{Binding InputNumberCommand}" CommandParameter="3" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="4" Command="{Binding InputNumberCommand}" CommandParameter="4" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="5" Command="{Binding InputNumberCommand}" CommandParameter="5" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="6" Command="{Binding InputNumberCommand}" CommandParameter="6" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="7" Command="{Binding InputNumberCommand}" CommandParameter="7" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="8" Command="{Binding InputNumberCommand}" CommandParameter="8" Style="{StaticResource SideButtonStyle}" />
+                            <Button Content="9" Command="{Binding InputNumberCommand}" CommandParameter="9" Style="{StaticResource SideButtonStyle}" />
                         </UniformGrid>
 
-                        <Separator Margin="0,16"/>
+                        <Separator Margin="0,18" />
 
+                        <!--
+                            Section des couleurs.
+
+                            Elle permet de choisir la couleur active
+                            et de l'appliquer aux cellules sélectionnées.
+                        -->
                         <TextBlock Text="Palette de couleurs"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
+                                   Style="{StaticResource SectionTitleTextStyle}" />
 
                         <UniformGrid Rows="5" Columns="2">
-                            <Button Content="Aucune" Command="{Binding SetColorCommand}" CommandParameter="None" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Bleu" Command="{Binding SetColorCommand}" CommandParameter="Blue" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Vert" Command="{Binding SetColorCommand}" CommandParameter="Green" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Jaune" Command="{Binding SetColorCommand}" CommandParameter="Yellow" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Rouge" Command="{Binding SetColorCommand}" CommandParameter="Red" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Violet" Command="{Binding SetColorCommand}" CommandParameter="Purple" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Orange" Command="{Binding SetColorCommand}" CommandParameter="Orange" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Rose" Command="{Binding SetColorCommand}" CommandParameter="Pink" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Gris" Command="{Binding SetColorCommand}" CommandParameter="Gray" Style="{StaticResource SideButtonStyle}"/>
-                            <Button Content="Cyan" Command="{Binding SetColorCommand}" CommandParameter="Cyan" Style="{StaticResource SideButtonStyle}"/>
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsNoColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="None"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteNone}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Aucune"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsBlueColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Blue"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteBlue}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Bleu"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsGreenColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Green"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteGreen}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Vert"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsYellowColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Yellow"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteYellow}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Jaune"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsRedColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Red"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteRed}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Rouge"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsPurpleColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Purple"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PalettePurple}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Violet"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsOrangeColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Orange"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteOrange}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Orange"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsPinkColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Pink"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PalettePink}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Rose"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsGrayColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Gray"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteGray}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Gris"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton GroupName="ColorGroup"
+                                         IsChecked="{Binding IsCyanColorSelected, Mode=OneWay}"
+                                         Command="{Binding SetColorCommand}"
+                                         CommandParameter="Cyan"
+                                         Style="{StaticResource ColorPaletteSelectableButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="16"
+                                             Height="16"
+                                             Fill="{StaticResource Brush.PaletteCyan}"
+                                             Stroke="{StaticResource Brush.BorderStrong}"
+                                             StrokeThickness="1"
+                                             Margin="0,0,8,0" />
+
+                                    <TextBlock Text="Cyan"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
                         </UniformGrid>
 
-                        <Separator Margin="0,16"/>
+                        <Separator Margin="0,18" />
 
+                        <!--
+                            Section des actions rapides.
+
+                            Elle expose les commandes d'annulation
+                            et de rétablissement de l'historique.
+                        -->
                         <TextBlock Text="Actions rapides"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,10"/>
+                                   Style="{StaticResource SectionTitleTextStyle}" />
 
                         <Button Content="Annuler"
                                 Command="{Binding UndoCommand}"
-                                Style="{StaticResource SideButtonStyle}"/>
+                                IsEnabled="{Binding CanUndo}"
+                                Style="{StaticResource SideButtonStyle}" />
 
                         <Button Content="Refaire"
                                 Command="{Binding RedoCommand}"
-                                Style="{StaticResource SideButtonStyle}"/>
+                                IsEnabled="{Binding CanRedo}"
+                                Style="{StaticResource SideButtonStyle}" />
 
                     </StackPanel>
                 </ScrollViewer>

@@ -26,13 +26,30 @@ public partial class MainWindow : Window
     /// <summary>
     /// Gère les touches du clavier avant les contrôles internes.
     /// 
-    /// Cela permet d'utiliser les chiffres 1 à 9 du clavier
-    /// pour remplir la cellule sélectionnée.
+    /// Cela permet d'utiliser les chiffres, les raccourcis clavier
+    /// et certaines actions rapides depuis la fenêtre principale.
     /// </summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (DataContext is not MainViewModel viewModel)
         {
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            if (HandleControlShortcut(e.Key, viewModel))
+            {
+                e.Handled = true;
+            }
+
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            viewModel.ClearSelection();
+            e.Handled = true;
             return;
         }
 
@@ -51,11 +68,50 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Gère les raccourcis clavier utilisant la touche Ctrl.
+    /// </summary>
+    /// <param name="key">Touche pressée.</param>
+    /// <param name="viewModel">ViewModel principal.</param>
+    /// <returns>True si le raccourci a été traité.</returns>
+    private static bool HandleControlShortcut(Key key, MainViewModel viewModel)
+    {
+        switch (key)
+        {
+            case Key.Z:
+                if (viewModel.CanUndo)
+                {
+                    viewModel.Undo();
+                }
+
+                return true;
+
+            case Key.Y:
+                if (viewModel.CanRedo)
+                {
+                    viewModel.Redo();
+                }
+
+                return true;
+
+            case Key.S:
+                viewModel.Save();
+                return true;
+
+            case Key.N:
+                viewModel.RequestNewGrid();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
     /// Convertit une touche clavier en chiffre Sudoku.
     /// 
     /// Supporte :
-    /// - les chiffres au-dessus des lettres : 1 à 9
-    /// - le pavé numérique : NumPad1 à NumPad9
+    /// - les chiffres au-dessus des lettres : 1 à 9 ;
+    /// - le pavé numérique : NumPad1 à NumPad9.
     /// </summary>
     private static int? ConvertKeyToNumber(Key key)
     {

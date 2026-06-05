@@ -1,0 +1,171 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Couleurs principales de l'application.
+
+        Ces ressources définissent l'identité visuelle globale :
+        arrière-plan, surfaces, barre supérieure et textes.
+    -->
+    <Color x:Key="Color.AppBackground">#F3F4F6</Color>
+    <Color x:Key="Color.Surface">#FFFFFF</Color>
+    <Color x:Key="Color.SurfaceAlt">#F8FAFC</Color>
+    <Color x:Key="Color.TopBar">#111827</Color>
+    <Color x:Key="Color.TopBarAlt">#1F2937</Color>
+
+    <!--
+        Couleurs du texte.
+
+        Elles permettent de distinguer le texte principal,
+        les textes secondaires et les textes affichés sur fond sombre.
+    -->
+    <Color x:Key="Color.OnSurface">#111827</Color>
+    <Color x:Key="Color.TextMuted">#64748B</Color>
+    <Color x:Key="Color.TextLight">#FFFFFF</Color>
+
+    <!--
+        Couleurs d'accent.
+
+        Elles sont utilisées pour les actions importantes,
+        les états actifs et les éléments interactifs.
+    -->
+    <Color x:Key="Color.Accent">#2563EB</Color>
+    <Color x:Key="Color.AccentStrong">#1D4ED8</Color>
+    <Color x:Key="Color.AccentSoft">#DBEAFE</Color>
+    <Color x:Key="Color.AccentHover">#1E40AF</Color>
+
+    <!--
+        Couleurs propres à la grille Sudoku.
+
+        Elles distinguent les lignes de la grille, les chiffres donnés,
+        les chiffres ajoutés par le joueur, les notes et la sélection.
+    -->
+    <Color x:Key="Color.GridLineThin">#6B7280</Color>
+    <Color x:Key="Color.GridLineThick">#111827</Color>
+    <Color x:Key="Color.GivenText">#111827</Color>
+    <Color x:Key="Color.UserValueText">#1D4ED8</Color>
+    <Color x:Key="Color.NoteText">#475569</Color>
+    <Color x:Key="Color.Selection">#60A5FA</Color>
+
+    <!--
+        Couleurs de surbrillance Sudoku.
+
+        Elles permettent d'afficher les cellules liées à la sélection :
+        même ligne, même colonne, même bloc ou même chiffre.
+    -->
+    <Color x:Key="Color.PeerHighlight">#EFF6FF</Color>
+    <Color x:Key="Color.SameValueHighlight">#FEF3C7</Color>
+
+    <!--
+        Couleurs des états visuels.
+
+        Elles sont utilisées pour les bordures, les erreurs
+        et les messages de réussite.
+    -->
+    <Color x:Key="Color.Border">#D1D5DB</Color>
+    <Color x:Key="Color.BorderStrong">#94A3B8</Color>
+    <Color x:Key="Color.Error">#D95F66</Color>
+    <Color x:Key="Color.ErrorBorder">#B91C1C</Color>
+    <Color x:Key="Color.Success">#16A34A</Color>
+
+    <!--
+        Couleurs de la palette utilisateur.
+
+        Elles sont utilisées pour afficher les pastilles
+        de la section Palette de couleurs.
+    -->
+    <Color x:Key="Color.PaletteNone">#FFFFFF</Color>
+    <Color x:Key="Color.PaletteBlue">#BFDBFE</Color>
+    <Color x:Key="Color.PaletteGreen">#BBF7D0</Color>
+    <Color x:Key="Color.PaletteYellow">#FEF08A</Color>
+    <Color x:Key="Color.PaletteRed">#FECACA</Color>
+    <Color x:Key="Color.PalettePurple">#DDD6FE</Color>
+    <Color x:Key="Color.PaletteOrange">#FED7AA</Color>
+    <Color x:Key="Color.PalettePink">#FBCFE8</Color>
+    <Color x:Key="Color.PaletteGray">#E5E7EB</Color>
+    <Color x:Key="Color.PaletteCyan">#BAE6FD</Color>
+
+    <!--
+        Brushes principales de l'application.
+
+        Les vues utilisent ces brushes afin d'éviter
+        les couleurs codées directement dans le XAML.
+    -->
+    <SolidColorBrush x:Key="Brush.AppBackground" Color="{StaticResource Color.AppBackground}" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}" />
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}" />
+    <SolidColorBrush x:Key="Brush.TopBar" Color="{StaticResource Color.TopBar}" />
+    <SolidColorBrush x:Key="Brush.TopBarAlt" Color="{StaticResource Color.TopBarAlt}" />
+
+    <!--
+        Brushes du texte.
+
+        Elles assurent une hiérarchie visuelle claire
+        entre texte principal, texte secondaire et texte clair.
+    -->
+    <SolidColorBrush x:Key="Brush.OnSurface" Color="{StaticResource Color.OnSurface}" />
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.TextLight" Color="{StaticResource Color.TextLight}" />
+
+    <!--
+        Brushes d'accent.
+
+        Elles sont utilisées pour les boutons actifs,
+        les survols et les actions principales.
+    -->
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="Brush.AccentStrong" Color="{StaticResource Color.AccentStrong}" />
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="{StaticResource Color.AccentSoft}" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
+
+    <!--
+        Brushes de la grille Sudoku.
+
+        Elles sont utilisées par les cellules, les valeurs
+        et les notes affichées dans la grille.
+    -->
+    <SolidColorBrush x:Key="Brush.GridLineThin" Color="{StaticResource Color.GridLineThin}" />
+    <SolidColorBrush x:Key="Brush.GridLineThick" Color="{StaticResource Color.GridLineThick}" />
+    <SolidColorBrush x:Key="Brush.GivenText" Color="{StaticResource Color.GivenText}" />
+    <SolidColorBrush x:Key="Brush.UserValueText" Color="{StaticResource Color.UserValueText}" />
+    <SolidColorBrush x:Key="Brush.NoteText" Color="{StaticResource Color.NoteText}" />
+    <SolidColorBrush x:Key="Brush.Selection" Color="{StaticResource Color.Selection}" />
+
+    <!--
+        Brushes de surbrillance Sudoku.
+
+        Elles affichent les cellules liées à la cellule sélectionnée.
+    -->
+    <SolidColorBrush x:Key="Brush.PeerHighlight" Color="{StaticResource Color.PeerHighlight}" />
+    <SolidColorBrush x:Key="Brush.SameValueHighlight" Color="{StaticResource Color.SameValueHighlight}" />
+
+    <!--
+        Brushes des états visuels.
+
+        Elles permettent de représenter les bordures,
+        les erreurs et les états positifs de l'application.
+    -->
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource Color.BorderStrong}" />
+    <SolidColorBrush x:Key="Brush.Error" Color="{StaticResource Color.Error}" />
+    <SolidColorBrush x:Key="Brush.ErrorBorder" Color="{StaticResource Color.ErrorBorder}" />
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+
+    <!--
+        Brushes de la palette utilisateur.
+
+        Elles permettent d'afficher les pastilles de couleur
+        sans coder les couleurs directement dans la vue.
+    -->
+    <SolidColorBrush x:Key="Brush.PaletteNone" Color="{StaticResource Color.PaletteNone}" />
+    <SolidColorBrush x:Key="Brush.PaletteBlue" Color="{StaticResource Color.PaletteBlue}" />
+    <SolidColorBrush x:Key="Brush.PaletteGreen" Color="{StaticResource Color.PaletteGreen}" />
+    <SolidColorBrush x:Key="Brush.PaletteYellow" Color="{StaticResource Color.PaletteYellow}" />
+    <SolidColorBrush x:Key="Brush.PaletteRed" Color="{StaticResource Color.PaletteRed}" />
+    <SolidColorBrush x:Key="Brush.PalettePurple" Color="{StaticResource Color.PalettePurple}" />
+    <SolidColorBrush x:Key="Brush.PaletteOrange" Color="{StaticResource Color.PaletteOrange}" />
+    <SolidColorBrush x:Key="Brush.PalettePink" Color="{StaticResource Color.PalettePink}" />
+    <SolidColorBrush x:Key="Brush.PaletteGray" Color="{StaticResource Color.PaletteGray}" />
+    <SolidColorBrush x:Key="Brush.PaletteCyan" Color="{StaticResource Color.PaletteCyan}" />
+
+</ResourceDictionary>

@@ -14,17 +14,40 @@ namespace SudokuSynthese.Wpf.ViewModels;
 public class CellViewModel : INotifyPropertyChanged
 {
     private Thickness _selectionBorderThickness = new Thickness(0);
+    private bool _isPeer;
+    private bool _isSameValue;
 
+    /// <summary>
+    /// Cellule métier associée à ce ViewModel.
+    /// </summary>
     public SudokuCell Cell { get; }
 
+    /// <summary>
+    /// Ligne de la cellule dans la grille.
+    /// </summary>
     public int Row => Cell.Row;
 
+    /// <summary>
+    /// Colonne de la cellule dans la grille.
+    /// </summary>
     public int Column => Cell.Column;
 
+    /// <summary>
+    /// Valeur finale de la cellule.
+    /// Null signifie que la cellule est vide.
+    /// </summary>
     public int? Value => Cell.Value;
 
+    /// <summary>
+    /// Texte affiché pour la valeur principale.
+    /// Si la cellule est vide, on affiche une chaîne vide.
+    /// </summary>
     public string ValueText => Cell.Value?.ToString() ?? string.Empty;
 
+    /// <summary>
+    /// Texte complet des notes en coin.
+    /// Exemple : "2 5 8 9".
+    /// </summary>
     public string CornerNotesText
     {
         get
@@ -33,6 +56,10 @@ public class CellViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Texte complet des notes centrales.
+    /// Exemple : "1 2 3 4 5".
+    /// </summary>
     public string CenterNotesText
     {
         get
@@ -42,10 +69,7 @@ public class CellViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Affiche les notes centrales sur une ou deux lignes.
-    /// Exemple :
-    /// 1 2 3 4 5
-    /// 6 7 8 9
+    /// Texte des notes centrales affiché sur une ou deux lignes.
     /// </summary>
     public string CenterNotesDisplayText
     {
@@ -73,31 +97,38 @@ public class CellViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Première note en coin affichée dans le coin haut gauche.
+    /// Première note affichée dans le coin haut gauche.
     /// Ce n'est pas forcément le chiffre 1.
     /// </summary>
     public string CornerNote1 => GetCornerNoteByIndex(0);
 
     /// <summary>
-    /// Deuxième note en coin affichée dans le coin haut droit.
+    /// Deuxième note affichée dans le coin haut droit.
     /// Ce n'est pas forcément le chiffre 2.
     /// </summary>
     public string CornerNote2 => GetCornerNoteByIndex(1);
 
     /// <summary>
-    /// Troisième note en coin affichée dans le coin bas gauche.
+    /// Troisième note affichée dans le coin bas gauche.
     /// Ce n'est pas forcément le chiffre 3.
     /// </summary>
     public string CornerNote3 => GetCornerNoteByIndex(2);
 
     /// <summary>
-    /// Quatrième note en coin affichée dans le coin bas droit.
+    /// Quatrième note affichée dans le coin bas droit.
     /// Ce n'est pas forcément le chiffre 4.
     /// </summary>
     public string CornerNote4 => GetCornerNoteByIndex(3);
 
+    /// <summary>
+    /// Couleur métier de la cellule.
+    /// La conversion vers une Brush WPF est faite par CellColorToBrushConverter.
+    /// </summary>
     public CellColor Color => Cell.Color;
 
+    /// <summary>
+    /// Indique si la cellule est sélectionnée.
+    /// </summary>
     public bool IsSelected
     {
         get => Cell.IsSelected;
@@ -111,6 +142,45 @@ public class CellViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Indique si la cellule est liée à la sélection courante.
+    /// 
+    /// Une cellule est liée si elle se trouve dans la même ligne,
+    /// la même colonne ou le même bloc 3x3 qu'une cellule sélectionnée.
+    /// </summary>
+    public bool IsPeer
+    {
+        get => _isPeer;
+        set
+        {
+            if (_isPeer != value)
+            {
+                _isPeer = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Indique si la cellule contient la même valeur
+    /// qu'une cellule sélectionnée.
+    /// </summary>
+    public bool IsSameValue
+    {
+        get => _isSameValue;
+        set
+        {
+            if (_isSameValue != value)
+            {
+                _isSameValue = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Indique si la cellule contient une erreur Sudoku.
+    /// </summary>
     public bool HasError
     {
         get => Cell.HasError;
@@ -124,11 +194,14 @@ public class CellViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Indique si la valeur de la cellule est donnée au départ.
+    /// </summary>
     public bool IsGiven => Cell.IsGiven;
 
     /// <summary>
     /// Bordure normale de la grille.
-    /// Les lignes sont plus épaisses entre les blocs 3x3.
+    /// Elle permet d'avoir des lignes plus épaisses entre les blocs 3x3.
     /// </summary>
     public Thickness BorderThickness
     {
@@ -145,7 +218,8 @@ public class CellViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Bordure bleue de sélection.
-    /// Elle est calculée pour dessiner seulement le contour extérieur
+    /// 
+    /// Elle est calculée pour afficher seulement le contour extérieur
     /// du groupe de cellules sélectionnées.
     /// </summary>
     public Thickness SelectionBorderThickness
@@ -161,11 +235,20 @@ public class CellViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Crée un ViewModel à partir d'une cellule métier.
+    /// </summary>
+    /// <param name="cell">Cellule métier à envelopper.</param>
     public CellViewModel(SudokuCell cell)
     {
         Cell = cell ?? throw new ArgumentNullException(nameof(cell));
     }
 
+    /// <summary>
+    /// Retourne la note affichée dans un emplacement visuel.
+    /// </summary>
+    /// <param name="index">Index de la note dans la liste triée.</param>
+    /// <returns>Le chiffre de la note ou une chaîne vide.</returns>
     private string GetCornerNoteByIndex(int index)
     {
         List<int> notes = Cell.CornerNotes
@@ -181,6 +264,9 @@ public class CellViewModel : INotifyPropertyChanged
         return notes[index].ToString();
     }
 
+    /// <summary>
+    /// Rafraîchit toutes les propriétés visibles dans l'interface.
+    /// </summary>
     public void Refresh()
     {
         OnPropertyChanged(nameof(Row));
@@ -200,6 +286,8 @@ public class CellViewModel : INotifyPropertyChanged
 
         OnPropertyChanged(nameof(Color));
         OnPropertyChanged(nameof(IsSelected));
+        OnPropertyChanged(nameof(IsPeer));
+        OnPropertyChanged(nameof(IsSameValue));
         OnPropertyChanged(nameof(HasError));
         OnPropertyChanged(nameof(IsGiven));
         OnPropertyChanged(nameof(BorderThickness));
